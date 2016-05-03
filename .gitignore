@@ -1,0 +1,24 @@
+# Bins
+*.class
+target/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# Jenkins
+#*.hpi
+
+# MAC
+.DS_Store
+.localized
+
+# IDEA
+*.iml
+.idea/
+
+#Sonar
+sonar-project.properties
+.sonar/
+

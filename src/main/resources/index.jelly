@@ -1,0 +1,4 @@
+<?jelly escape-by-default='true'?>
+<div>
+  This plugin is used to add a build step to read/write/delete &lt;K,V&gt; pairs from the HashiCorp Consul Key/Value store.
+</div>

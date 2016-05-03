@@ -1,0 +1,38 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:entry title="ACL Token" field="token">
+    <f:textbox />
+  </f:entry>
+  <f:entry title="Host URL" field="hostUrl">
+    <f:textbox />
+  </f:entry>
+  <f:entry title="Key" field="key">
+    <f:textbox />
+  </f:entry>
+
+  <f:entry title="ENV Variable Key" field="envVarKey">
+    <f:textbox />
+  </f:entry>
+  <f:advanced>
+    <f:entry field="requestMode" title="Request Mode">
+      <f:select />
+    </f:entry>
+       <f:entry field="debugMode" title="Debug Mode">
+            <f:select />
+          </f:entry>
+    <f:entry title="Value" field="keyValue">
+      <f:textbox />
+    </f:entry>
+    <f:entry title="API URL Override" field="urlOverride">
+      <f:textbox />
+    </f:entry>
+
+    <f:entry field="timeoutConnection" title="Connection timeout">
+      <f:number />
+    </f:entry>
+    <f:entry field="timeoutResponse" title="Response timeout">
+      <f:number />
+    </f:entry>
+  </f:advanced>
+</j:jelly>
+
