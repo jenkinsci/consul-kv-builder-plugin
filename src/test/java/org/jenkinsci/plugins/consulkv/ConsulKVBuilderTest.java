@@ -24,7 +24,7 @@ import static org.junit.Assert.assertThat;
  */
 public class ConsulKVBuilderTest {
 
-    private static final String ACL_ID = "b60a3ff8-79ac-a1ac-7fa2-cb6fad6654b6";
+    private static final String ACL_ID = "<USE_IF_NEEDED>";
     private static final String HOST = "<CONSUL_HTTP_API_URL>";
     private static final String KEY = "test/test-key";
     private static final String VALUE = "test-value";
