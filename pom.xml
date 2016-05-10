@@ -11,7 +11,7 @@
 
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>consul-kv-builder</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Consul KV Builder</name>
 
