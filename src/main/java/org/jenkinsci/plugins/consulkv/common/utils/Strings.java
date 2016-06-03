@@ -12,6 +12,12 @@ import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * String utilities
+ *
+ * @author Jimmy Ray
+ * @version 1.0.0
+ */
 public final class Strings extends StringUtils {
     private static final Logger LOG = LoggerFactory.getLogger(Strings.class);
 
@@ -112,6 +118,10 @@ public final class Strings extends StringUtils {
         Pattern pattern = Pattern.compile(regExPattern);
         Matcher matcher = pattern.matcher(test);
         return matcher.matches();
+    }
+
+    public static String normalizeStoragekey(String storageKey) {
+        return storageKey.replace('.', '_').replace('/', '_');
     }
 }
 

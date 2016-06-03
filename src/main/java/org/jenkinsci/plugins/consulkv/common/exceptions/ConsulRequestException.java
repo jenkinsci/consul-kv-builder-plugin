@@ -1,12 +1,12 @@
 package org.jenkinsci.plugins.consulkv.common.exceptions;
 
 /**
- * BuilderException
+ * ConsulRequestException
  *
  * @author Jimmy Ray
  * @version 1.0.0
  */
-public class BuilderException extends Exception {
+public class ConsulRequestException extends Exception {
 
     private static final long serialVersionUID = 2161055784155502757L;
 
@@ -14,7 +14,7 @@ public class BuilderException extends Exception {
      * Constructs a new instance of this class with <code>null</code> as its
      * detail message.
      */
-    public BuilderException() {
+    public ConsulRequestException() {
         super();
     }
 
@@ -25,7 +25,7 @@ public class BuilderException extends Exception {
      * @param message the detail message. The detail message is saved for later
      *                retrieval by the {@link #getMessage()} method.
      */
-    public BuilderException(String message) {
+    public ConsulRequestException(String message) {
         super(message);
     }
 
@@ -37,7 +37,7 @@ public class BuilderException extends Exception {
      *                  retrieval by the {@link #getMessage()} method.
      * @param rootCause root failure cause
      */
-    public BuilderException(String message, Throwable rootCause) {
+    public ConsulRequestException(String message, Throwable rootCause) {
         super(message, rootCause);
     }
 
@@ -46,7 +46,7 @@ public class BuilderException extends Exception {
      *
      * @param rootCause root failure cause
      */
-    public BuilderException(Throwable rootCause) {
+    public ConsulRequestException(Throwable rootCause) {
         super(rootCause);
     }
 }

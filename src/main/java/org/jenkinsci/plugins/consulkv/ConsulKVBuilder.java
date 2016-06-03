@@ -1,73 +1,58 @@
 package org.jenkinsci.plugins.consulkv;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.api.client.util.Base64;
-import hudson.EnvVars;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.EnvironmentContributingAction;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.jenkinsci.plugins.consulkv.common.Constants;
 import org.jenkinsci.plugins.consulkv.common.DebugMode;
 import org.jenkinsci.plugins.consulkv.common.RequestMode;
+import org.jenkinsci.plugins.consulkv.common.VariableInjectionAction;
 import org.jenkinsci.plugins.consulkv.common.exceptions.BuilderException;
+import org.jenkinsci.plugins.consulkv.common.exceptions.ConsulRequestException;
+import org.jenkinsci.plugins.consulkv.common.exceptions.ValidationException;
+import org.jenkinsci.plugins.consulkv.common.utils.ConsulRequestUtils;
 import org.jenkinsci.plugins.consulkv.common.utils.Strings;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 /**
+ * Jenkins Plugin to READ/WRITE/DELETE K/V pairs from/to a Consul cluster, and set a build ENV variable to
+ * be used by downstream build steps.
+ *
  * @author Jimmy Ray
- * @version 1.0.1
- *          <p>
- *          Jenkins Plugin to READ/WRITE/DELETE K/V pairs from/to a Consul cluster, and set a build ENV variable to
- *          be used by
- *          downstream build steps.
+ * @version 2.0.0
  */
-public class ConsulKVBuilder extends Builder {
-    private static final String TOKEN_URL_PATTERN = "?token=%s";
-
-    private final String token;
+public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
     private final String hostUrl;
     private final String key;
-    private final String keyValue;
-    private final String urlOverride;
-    private final String envVarKey;
-    private final RequestMode requestMode;
-    private final Integer timeoutConnection;
-    private final Integer timeoutResponse;
-    private final DebugMode debugMode;
+    private String token;
+    private String keyValue;
+    private String urlOverride;
+    private String envVarKey;
+    private RequestMode requestMode;
+    private Integer timeoutConnection;
+    private Integer timeoutResponse;
+    private DebugMode debugMode;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
-    @DataBoundConstructor
+    @Deprecated
     public ConsulKVBuilder(String token, String hostUrl, String key, String keyValue, String urlOverride, String
             envVarKey, RequestMode requestMode, Integer timeoutConnection, Integer timeoutResponse, DebugMode
                                    debugMode) {
@@ -83,8 +68,19 @@ public class ConsulKVBuilder extends Builder {
         this.debugMode = debugMode;
     }
 
+    @DataBoundConstructor
+    public ConsulKVBuilder(@CheckForNull String hostUrl, @CheckForNull String key) {
+        this.hostUrl = hostUrl;
+        this.key = key;
+    }
+
     public String getToken() {
         return this.token;
+    }
+
+    @DataBoundSetter
+    public void setToken(@CheckForNull String token) {
+        this.token = token;
     }
 
     public String getHostUrl() {
@@ -99,32 +95,72 @@ public class ConsulKVBuilder extends Builder {
         return this.keyValue;
     }
 
+    @DataBoundSetter
+    public void setKeyValue(@CheckForNull String keyValue) {
+        this.keyValue = keyValue;
+    }
+
     public String getUrlOverride() {
         return this.urlOverride;
+    }
+
+    @DataBoundSetter
+    public void setUrlOverride(@CheckForNull String urlOverride) {
+        this.urlOverride = urlOverride;
     }
 
     public String getEnvVarKey() {
         return this.envVarKey;
     }
 
+    @DataBoundSetter
+    public void setEnvVarKey(@CheckForNull String envVarKey) {
+        this.envVarKey = envVarKey;
+    }
+
     public RequestMode getRequestMode() {
         return this.requestMode;
+    }
+
+    @DataBoundSetter
+    public void setRequestMode(@CheckForNull RequestMode requestMode) {
+        this.requestMode = requestMode;
     }
 
     public Integer getTimeoutConnection() {
         return this.timeoutConnection;
     }
 
+    @DataBoundSetter
+    public void setTimeoutConnection(@CheckForNull Integer timeoutConnection) {
+        this.timeoutConnection = timeoutConnection;
+    }
+
     public Integer getTimeoutResponse() {
         return this.timeoutResponse;
+    }
+
+    @DataBoundSetter
+    public void setTimeoutResponse(@CheckForNull Integer timeoutResponse) {
+        this.timeoutResponse = timeoutResponse;
     }
 
     public DebugMode getDebugMode() {
         return this.debugMode;
     }
 
+    @DataBoundSetter
+    public void setDebugMode(@CheckForNull DebugMode debugMode) {
+        this.debugMode = debugMode;
+    }
+
+    public DescriptorImpl getDescriptor() {
+        return new DescriptorImpl();
+    }
+
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+    public void perform(@Nonnull Run<?, ?> build, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull
+    TaskListener listener) throws InterruptedException, IOException {
 
         final PrintStream logger = listener.getLogger();
 
@@ -144,9 +180,9 @@ public class ConsulKVBuilder extends Builder {
             apiUrl = urlOverride;
         }
 
-        CloseableHttpClient httpclient = null;
-
         try {
+            String responseRaw = null;
+
             if (this.token == null || "".equals(this.token)) {
                 //No token
                 url += apiUrl + this.key;
@@ -164,97 +200,60 @@ public class ConsulKVBuilder extends Builder {
                                 this.token));
                     }
 
-                    String tokenLocal = build.getBuildVariableResolver().resolve(tokenKeys.get(0));
+                    String tokenLocal = build.getEnvironment(listener).get(tokenKeys.get(0));
 
                     if (debugMode.equals(DebugMode.ENABLED)) {
                         logger.println("Token to be used=" + tokenLocal);
                     }
 
-                    url += apiUrl + this.key + String.format(ConsulKVBuilder.TOKEN_URL_PATTERN, tokenLocal);
+                    url += apiUrl + this.key + String.format(Constants.TOKEN_URL_PATTERN, tokenLocal);
                 } else {
                     //Use token field value
-                    url += apiUrl + this.key + String.format(ConsulKVBuilder.TOKEN_URL_PATTERN, this.token);
+                    url += apiUrl + this.key + String.format(Constants.TOKEN_URL_PATTERN, this.token);
                 }
             }
 
-            logger.println("Consul URL for K/V Lookup:  " + url);
-
-            httpclient = HttpClients.createDefault();
-            HttpDelete httpDelete = null;
-            HttpGet httpGet = null;
-            HttpPut httpPut = null;
-            RequestConfig requestConfig = RequestConfig.custom()
-                    .setSocketTimeout(timeoutConn)
-                    .setConnectTimeout(timeoutConn)
-                    .setConnectionRequestTimeout(timeoutResp)
-                    .build();
-
-            String responseBody = null;
-
-            ResponseHandler<String> responseHandler = new ResponseHandler<String>() {
-                @Override
-                public String handleResponse(final HttpResponse response) throws IOException {
-                    if (debugMode.equals(DebugMode.ENABLED)) {
-                        logger.println("Response Headers: ");
-                        Header[] headers = response.getAllHeaders();
-                        for (Header header : headers) {
-                            logger.println(String.format("%s=%s", header.getName(), header.getValue()));
-                        }
-                    }
-
-                    int status = response.getStatusLine().getStatusCode();
-                    if (status >= Constants.HTTP_OK && status < Constants.HTTP_MULTI_CHOICES) {
-                        HttpEntity entity = response.getEntity();
-
-                        if (entity != null) {
-                            return EntityUtils.toString(entity);
-                        }
-                    } else {
-                        throw new ClientProtocolException("Unexpected response status: " + status);
-                    }
-
-                    return null;
-                }
-            };
+            if (this.debugMode.equals(DebugMode.ENABLED)) {
+                logger.println("Consul URL for K/V Lookup:  " + url);
+            }
 
             if (this.requestMode.equals(RequestMode.READ)) {
-                httpGet = new HttpGet(url);
-                httpGet.setConfig(requestConfig);
+                //Read
+                ConsulRequest consulRequest = ConsulRequestFactory.request().withUrl(url).withTimeoutConnect
+                        (timeoutConn).withTimeoutResponse(timeoutResp).withDebugMode(debugMode).withRequestMode
+                        (requestMode).withLogger(logger).build();
 
-                responseBody = httpclient.execute(httpGet, responseHandler);
-                String value = this.decodeValue(this.parseJson(responseBody));
-
+                responseRaw = ConsulRequestUtils.read(consulRequest);
+                String value = ConsulRequestUtils.decodeValue(ConsulRequestUtils.parseJson(responseRaw));
                 logger.println(String.format("Consul K/V pair:  %s=%s", this.key, value));
 
                 //Set ENV Variable
-                String storageKey = this.envVarKey.replace('.', '_').replace('/', '_');
+                String storageKey = Strings.normalizeStoragekey(this.envVarKey);
 
                 VariableInjectionAction action = new VariableInjectionAction(storageKey, value);
                 build.addAction(action);
                 build.getEnvironment(listener);
 
                 logger.println(String.format("Stored ENV variable (k,v):  %s=%s", storageKey, build.getEnvironment
-                        (listener).get
-                        (storageKey)));
+                        (listener).get(storageKey)));
             } else if (this.requestMode.equals(RequestMode.WRITE)) {
-                httpPut = new HttpPut(url);
-                httpPut.setConfig(requestConfig);
-                httpPut.addHeader(Constants.LABEL_CONTENT_TYPE, Constants.MEDIA_TYPE_PLAIN_TEXT);
-                httpPut.addHeader(Constants.LABEL_ACCEPT, Constants.MEDIA_TYPE_APP_JSON);
-                StringEntity input = new StringEntity(this.keyValue);
-                httpPut.setEntity(input);
-                responseBody = httpclient.execute(httpPut, responseHandler);
+                //Write
+                ConsulRequest consulRequest = ConsulRequestFactory.request().withUrl(url).withValue(this.keyValue)
+                        .withTimeoutConnect(timeoutConn).withTimeoutResponse(timeoutResp).withDebugMode(debugMode)
+                        .withRequestMode(requestMode).withLogger(logger).build();
+
+                responseRaw = ConsulRequestUtils.write(consulRequest);
             } else {
                 //Delete
-                httpDelete = new HttpDelete(url);
-                httpDelete.setConfig(requestConfig);
-                httpDelete.addHeader(Constants.LABEL_CONTENT_TYPE, Constants.MEDIA_TYPE_PLAIN_TEXT);
-                httpDelete.addHeader(Constants.LABEL_ACCEPT, Constants.MEDIA_TYPE_APP_JSON);
-                responseBody = httpclient.execute(httpDelete, responseHandler);
+                ConsulRequest consulRequest = ConsulRequestFactory.request().withUrl(url).withTimeoutConnect
+                        (timeoutConn).withTimeoutResponse(timeoutResp).withDebugMode(debugMode).withRequestMode
+                        (requestMode).withLogger(logger).build();
+
+                responseRaw = ConsulRequestUtils.delete(consulRequest);
             }
 
             if (this.debugMode.equals(DebugMode.ENABLED)) {
-                logger.printf("Raw content:  %s%n", responseBody);
+                logger.printf("Raw content:  %s%n", responseRaw);
             }
         } catch (BuilderException be) {
             logger.printf("Builder exception was detected:  %s%n", be);
@@ -266,39 +265,12 @@ public class ConsulKVBuilder extends Builder {
             logger.printf("Interrupted exception was detected:  %s%n", ie);
             Thread.currentThread().interrupt();
             status = false;
-        } finally {
-            if (httpclient != null) {
-                try {
-                    httpclient.close();
-                } catch (IOException ioe) {
-                    logger.printf("IO Exception was encountered when closing HTTP client.  %s%n", ioe);
-                    status = false;
-                }
-            }
+        } catch (ValidationException ve) {
+            logger.printf("Validation exception was detected:  %s%n", ve);
+            status = false;
+        } catch (ConsulRequestException cre) {
+            logger.printf("Consul request exception was detected:  %s%n", cre);
         }
-
-        return status;
-    }
-
-    private String parseJson(String data) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonFactory factory = mapper.getJsonFactory();
-
-        JsonParser jsonParser = factory.createParser(data);
-        JsonNode actualObj = mapper.readTree(jsonParser);
-
-        return actualObj.get(0).get("Value").toString();
-    }
-
-    private String decodeValue(String value) throws UnsupportedEncodingException {
-        byte[] valueDecoded = Base64.decodeBase64(value);
-        return new String(valueDecoded, Constants.DEFAULT_ENCODING);
-    }
-
-    // Overridden for better type safety.
-    @Override
-    public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl) super.getDescriptor();
     }
 
     /**
@@ -422,40 +394,6 @@ public class ConsulKVBuilder extends Builder {
         @Override
         public String getDisplayName() {
             return "Consul K/V Builder";
-        }
-    }
-
-    static final class VariableInjectionAction implements EnvironmentContributingAction {
-
-        private String key;
-        private String value;
-
-        public VariableInjectionAction(String key, String value) {
-            this.key = key;
-            this.value = value;
-        }
-
-        @Override
-        public void buildEnvVars(AbstractBuild build, EnvVars envVars) {
-
-            if (envVars != null && key != null && value != null) {
-                envVars.put(key, value);
-            }
-        }
-
-        @Override
-        public String getDisplayName() {
-            return "VariableInjectionAction";
-        }
-
-        @Override
-        public String getIconFileName() {
-            return null;
-        }
-
-        @Override
-        public String getUrlName() {
-            return null;
         }
     }
 }

@@ -1,0 +1,3 @@
+<div>
+Creates read request configs that will cause lookups to Hashicorp Consul REST API to set ENV variables in the build.
+</div>

@@ -17,15 +17,16 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertThat;
 
 /**
- * Created by pim329 on 4/4/16.
- * <p>
- * This test uses the Jenkins test harness and requires a Consul server be reachable and the correct ACL entries are
- * configured.
+ * This test uses the Jenkins test harness and requires a Consul server be reachable and for the correct ACL entries
+ * to be configured.
+ *
+ * @author Jimmy Ray
+ * @version 1.0.0
  */
 public class ConsulKVBuilderTest {
 
-    private static final String ACL_ID = "<USE_IF_NEEDED>";
-    private static final String HOST = "<CONSUL_HTTP_API_URL>";
+    private static final String ACL_ID = "<ACL_ID>";
+    private static final String HOST = "<CONSUL_HOST_URL>";
     private static final String KEY = "test/test-key";
     private static final String VALUE = "test-value";
     private static final String ENV_KEY = "test-key";
