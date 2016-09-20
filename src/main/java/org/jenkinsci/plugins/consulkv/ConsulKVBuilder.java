@@ -1,9 +1,11 @@
 package org.jenkinsci.plugins.consulkv;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
+import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -163,7 +165,8 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
     TaskListener listener) throws InterruptedException, IOException {
 
         final PrintStream logger = listener.getLogger();
-
+        final EnvVars environment = build.getEnvironment(listener);
+        
         boolean status = true;
 
         int timeoutConn = (this.timeoutConnection == null || this.timeoutConnection.intValue() == 0) ? Constants
@@ -171,55 +174,37 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
         int timeoutResp = (this.timeoutResponse == null || this.timeoutResponse.intValue() == 0) ? Constants
                 .TIMEOUT_RESPONSE : this.timeoutResponse;
 
-        String url = this.hostUrl;
+        String expandedUrl = environment.expand(this.hostUrl);
+        StringBuilder urlStringBuilder = new StringBuilder(expandedUrl);
         String apiUrl = null;
 
         if (this.urlOverride == null || "".equals(this.urlOverride)) {
             apiUrl = Constants.API_URI;
         } else {
-            apiUrl = urlOverride;
+            apiUrl = environment.expand(urlOverride);
         }
 
         try {
             String responseRaw = null;
+            String expandedKey = environment.expand(this.key);
 
             if (this.token == null || "".equals(this.token)) {
                 //No token
-                url += apiUrl + this.key;
+            	urlStringBuilder.append(apiUrl).append(expandedKey);
             } else {
-                if (this.token.contains("${")) {
-                    if (debugMode.equals(DebugMode.ENABLED)) {
-                        logger.println("Token=" + this.token);
-                    }
-
-                    //Resolve token from supplied build parm
-                    List<String> tokenKeys = Strings.parseRegExGroups(this.token, Constants.REGEX_PATTERN_BUILD_PARM);
-
-                    if (tokenKeys == null || tokenKeys.isEmpty()) {
-                        throw new BuilderException(String.format("Builder could not parse build parameter from %s.",
-                                this.token));
-                    }
-
-                    String tokenLocal = build.getEnvironment(listener).get(tokenKeys.get(0));
-
-                    if (debugMode.equals(DebugMode.ENABLED)) {
-                        logger.println("Token to be used=" + tokenLocal);
-                    }
-
-                    url += apiUrl + this.key + String.format(Constants.TOKEN_URL_PATTERN, tokenLocal);
-                } else {
-                    //Use token field value
-                    url += apiUrl + this.key + String.format(Constants.TOKEN_URL_PATTERN, this.token);
-                }
+            	
+            	String expandedToken = environment.expand(this.token);
+            	String formattedTokenString = String.format(Constants.TOKEN_URL_PATTERN, expandedToken);
+            	urlStringBuilder.append(apiUrl).append(expandedKey).append(formattedTokenString);
             }
 
             if (this.debugMode.equals(DebugMode.ENABLED)) {
-                logger.println("Consul URL for K/V Lookup:  " + url);
+                logger.println("Consul URL for K/V Lookup:  " + urlStringBuilder.toString());
             }
 
             if (this.requestMode.equals(RequestMode.READ)) {
                 //Read
-                ConsulRequest consulRequest = ConsulRequestFactory.request().withUrl(url).withTimeoutConnect
+                ConsulRequest consulRequest = ConsulRequestFactory.request().withUrl(urlStringBuilder.toString()).withTimeoutConnect
                         (timeoutConn).withTimeoutResponse(timeoutResp).withDebugMode(debugMode).withRequestMode
                         (requestMode).withLogger(logger).build();
 
@@ -228,7 +213,8 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
                 logger.println(String.format("Consul K/V pair:  %s=%s", this.key, value));
 
                 //Set ENV Variable
-                String storageKey = Strings.normalizeStoragekey(this.envVarKey);
+                String expandedEnvVarKey = environment.expand(this.envVarKey);
+                String storageKey = Strings.normalizeStoragekey(expandedEnvVarKey);
 
                 VariableInjectionAction action = new VariableInjectionAction(storageKey, value);
                 build.addAction(action);
@@ -238,14 +224,15 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
                         (listener).get(storageKey)));
             } else if (this.requestMode.equals(RequestMode.WRITE)) {
                 //Write
-                ConsulRequest consulRequest = ConsulRequestFactory.request().withUrl(url).withValue(this.keyValue)
+            	String expandedKeyValue = environment.expand(this.keyValue);
+                ConsulRequest consulRequest = ConsulRequestFactory.request().withUrl(urlStringBuilder.toString()).withValue(expandedKeyValue)
                         .withTimeoutConnect(timeoutConn).withTimeoutResponse(timeoutResp).withDebugMode(debugMode)
                         .withRequestMode(requestMode).withLogger(logger).build();
 
                 responseRaw = ConsulRequestUtils.write(consulRequest);
             } else {
                 //Delete
-                ConsulRequest consulRequest = ConsulRequestFactory.request().withUrl(url).withTimeoutConnect
+                ConsulRequest consulRequest = ConsulRequestFactory.request().withUrl(urlStringBuilder.toString()).withTimeoutConnect
                         (timeoutConn).withTimeoutResponse(timeoutResp).withDebugMode(debugMode).withRequestMode
                         (requestMode).withLogger(logger).build();
 
@@ -255,22 +242,18 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
             if (this.debugMode.equals(DebugMode.ENABLED)) {
                 logger.printf("Raw content:  %s%n", responseRaw);
             }
-        } catch (BuilderException be) {
-            logger.printf("Builder exception was detected:  %s%n", be);
-            status = false;
+            
         } catch (IOException ioe) {
-            logger.printf("IO exception was detected:  %s%n", ioe);
-            status = false;
-        } catch (InterruptedException ie) {
-            logger.printf("Interrupted exception was detected:  %s%n", ie);
-            Thread.currentThread().interrupt();
-            status = false;
+            build.setResult(Result.FAILURE);
+            listener.fatalError("IO exception was detected:  %s%n", ioe);
         } catch (ValidationException ve) {
-            logger.printf("Validation exception was detected:  %s%n", ve);
-            status = false;
+            build.setResult(Result.FAILURE);
+            listener.fatalError("Validation exception was detected:  %s%n", ve);
         } catch (ConsulRequestException cre) {
-            logger.printf("Consul request exception was detected:  %s%n", cre);
+            build.setResult(Result.FAILURE);
+            listener.fatalError("Consul request exception was detected:  %s%n", cre);
         }
+        
     }
 
     /**
