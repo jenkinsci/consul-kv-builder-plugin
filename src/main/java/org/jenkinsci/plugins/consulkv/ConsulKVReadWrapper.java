@@ -5,6 +5,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
+import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildWrapperDescriptor;
@@ -110,11 +111,14 @@ public class ConsulKVReadWrapper extends SimpleBuildWrapper {
                             context.getEnv().get(read.getEnvKey())));
                 }
             } catch (IOException ioe) {
-                logger.printf("IO exception was detected:  %s%n", ioe);
+                run.setResult(Result.FAILURE);
+                listener.fatalError("IO exception was detected:  %s%n", ioe);
             } catch (ValidationException ve) {
-                logger.printf("Validation exception was detected:  %s%n", ve);
+                run.setResult(Result.FAILURE);
+                listener.fatalError("Validation exception was detected:  %s%n", ve);
             } catch (ConsulRequestException cre) {
-                logger.printf("Consul request exception was detected:  %s%n", cre);
+                run.setResult(Result.FAILURE);
+                listener.fatalError("Consul request exception was detected:  %s%n", cre);
             }
         }
     }

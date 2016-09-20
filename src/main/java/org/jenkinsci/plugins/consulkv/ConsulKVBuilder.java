@@ -199,7 +199,7 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
             }
 
             if (this.debugMode.equals(DebugMode.ENABLED)) {
-                logger.println("Consul URL for K/V Lookup:  " + urlStringBuilder.toString());
+                logger.println("Consul " + this.requestMode.name() + " URL:  " + urlStringBuilder.toString());
             }
 
             if (this.requestMode.equals(RequestMode.READ)) {
