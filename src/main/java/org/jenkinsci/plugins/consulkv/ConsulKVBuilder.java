@@ -18,7 +18,6 @@ import org.jenkinsci.plugins.consulkv.common.Constants;
 import org.jenkinsci.plugins.consulkv.common.DebugMode;
 import org.jenkinsci.plugins.consulkv.common.RequestMode;
 import org.jenkinsci.plugins.consulkv.common.VariableInjectionAction;
-import org.jenkinsci.plugins.consulkv.common.exceptions.BuilderException;
 import org.jenkinsci.plugins.consulkv.common.exceptions.ConsulRequestException;
 import org.jenkinsci.plugins.consulkv.common.exceptions.ValidationException;
 import org.jenkinsci.plugins.consulkv.common.utils.ConsulRequestUtils;
@@ -32,7 +31,6 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.List;
 
 /**
  * Jenkins Plugin to READ/WRITE/DELETE K/V pairs from/to a Consul cluster, and set a build ENV variable to
