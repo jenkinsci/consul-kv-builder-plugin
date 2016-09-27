@@ -23,6 +23,7 @@ import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Wrapper plugin to read Consul K/V data and store in ENV variables
@@ -31,7 +32,6 @@ import java.util.List;
  * @version 1.0.0
  */
 public class ConsulKVReadWrapper extends SimpleBuildWrapper {
-
     protected List<ReadBean> reads;
 
     @DataBoundConstructor
@@ -46,38 +46,48 @@ public class ConsulKVReadWrapper extends SimpleBuildWrapper {
 
         for (ReadBean read : reads) {
 
-            //Make Consul Call to get K/V data
-            int timeoutConn = (read.getTimeoutConnect() == 0) ? Constants
-                    .TIMEOUT_CONNECTION : read.getTimeoutConnect();
-            int timeoutResp = (read.getTimeoutResponse() == 0) ? Constants
-                    .TIMEOUT_RESPONSE : read.getTimeoutResponse();
-
-            String apiUrl = null;
-            if (Strings.isBlank(read.getUrlOverride())) {
-                apiUrl = Constants.API_URI;
-            } else {
-                apiUrl = read.getUrlOverride();
-            }
-
-            String url = read.getUrl();
-
             try {
-                if (!Strings.isBlank(read.getToken())) {
+                if (!read.isUseGlobalSettings()) {
+                    //Try to use global settings and backup from constants.
+                    read.updateFromGlobalConfiguration();
+
+                    if (Strings.isEmpty(read.getHostUrl())) {
+                        throw new ConsulRequestException("Global settings host URL was not found.");
+                    }
+                }
+
+                //Make Consul Call to get K/V data
+                int timeoutConn = (read.getTimeoutConnect() == 0) ? Constants
+                        .TIMEOUT_CONNECTION : read.getTimeoutConnect();
+                int timeoutResp = (read.getTimeoutResponse() == 0) ? Constants
+                        .TIMEOUT_RESPONSE : read.getTimeoutResponse();
+
+                String apiUrl = null;
+                if (Strings.isBlank(read.getApiUri())) {
+                    apiUrl = Constants.API_URI;
+                } else {
+                    apiUrl = read.getApiUri();
+                }
+
+                String url = read.getHostUrl();
+
+
+                if (!Strings.isBlank(read.getAclToken())) {
                     url += apiUrl + read.getKey();
                 } else {
-                    if (read.getToken().contains("${")) {
+                    if (read.getAclToken().contains("${")) {
                         if (read.getDebugMode().equals(DebugMode.ENABLED)) {
-                            logger.println("Token=" + read.getToken());
+                            logger.println("ACL Token=" + read.getAclToken());
                         }
 
                         //Resolve token from supplied build parm
-                        List<String> tokenKeys = Strings.parseRegExGroups(read.getToken(), Constants
+                        List<String> tokenKeys = Strings.parseRegExGroups(read.getAclToken(), Constants
                                 .REGEX_PATTERN_BUILD_PARM);
 
                         if (tokenKeys == null || tokenKeys.isEmpty()) {
                             throw new ValidationException(String.format("Wrapper could not parse build parameter from" +
                                             " %s.",
-                                    read.getToken()));
+                                    read.getAclToken()));
                         }
 
                         String tokenLocal = run.getEnvironment(listener).get(tokenKeys.get(0));
@@ -89,7 +99,7 @@ public class ConsulKVReadWrapper extends SimpleBuildWrapper {
                         url += apiUrl + read.getKey() + String.format(Constants.TOKEN_URL_PATTERN, tokenLocal);
                     } else {
                         //Use token field value
-                        url += apiUrl + read.getKey() + String.format(Constants.TOKEN_URL_PATTERN, read.getToken());
+                        url += apiUrl + read.getKey() + String.format(Constants.TOKEN_URL_PATTERN, read.getAclToken());
                     }
                 }
 
@@ -136,7 +146,7 @@ public class ConsulKVReadWrapper extends SimpleBuildWrapper {
 
         @Override
         public String getDisplayName() {
-            return "Add Consul Read Config(s)";
+            return "Add Consul K/V Read Config(s)";
         }
 
         @Override

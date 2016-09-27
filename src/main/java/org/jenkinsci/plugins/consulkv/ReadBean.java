@@ -6,6 +6,7 @@ import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.consulkv.common.DebugMode;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -23,20 +24,21 @@ import java.io.IOException;
 public class ReadBean extends AbstractDescribableImpl<ReadBean> {
 
     private String key;
-    private String url;
+    private String hostUrl;
     private String envKey;
-    private String token;
+    private String aclToken;
     private DebugMode debugMode;
-    private String urlOverride;
+    private String apiUri;
     private int timeoutConnect;
     private int timeoutResponse;
+    private boolean useGlobalSettings;
 
     @DataBoundConstructor
-    public ReadBean(String token, String url,
+    public ReadBean(String aclToken, String hostUrl,
                     String key, String envKey) {
         super();
-        this.token = token;
-        this.url = url;
+        this.aclToken = aclToken;
+        this.hostUrl = hostUrl;
         this.key = key;
         this.envKey = envKey;
     }
@@ -50,13 +52,13 @@ public class ReadBean extends AbstractDescribableImpl<ReadBean> {
         this.debugMode = debugMode;
     }
 
-    public String getUrlOverride() {
-        return urlOverride;
+    public String getApiUri() {
+        return apiUri;
     }
 
     @DataBoundSetter
-    public void setUrlOverride(String urlOverride) {
-        this.urlOverride = urlOverride;
+    public void setApiUri(String apiUri) {
+        this.apiUri = apiUri;
     }
 
     public int getTimeoutConnect() {
@@ -77,6 +79,15 @@ public class ReadBean extends AbstractDescribableImpl<ReadBean> {
         this.timeoutResponse = timeoutResponse;
     }
 
+    public boolean isUseGlobalSettings() {
+        return this.useGlobalSettings;
+    }
+
+    @DataBoundSetter
+    public void setUseGlobalSettings(boolean useGlobalSettings) {
+        this.useGlobalSettings = useGlobalSettings;
+    }
+
     public String getKey() {
         return key;
     }
@@ -85,12 +96,12 @@ public class ReadBean extends AbstractDescribableImpl<ReadBean> {
         this.key = key;
     }
 
-    public String getUrl() {
-        return url;
+    public String getHostUrl() {
+        return hostUrl;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setHostUrl(String hostUrl) {
+        this.hostUrl = hostUrl;
     }
 
     public String getEnvKey() {
@@ -101,24 +112,119 @@ public class ReadBean extends AbstractDescribableImpl<ReadBean> {
         this.envKey = envKey;
     }
 
-    public String getToken() {
-        return token;
+    public String getAclToken() {
+        return aclToken;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public void setAclToken(String token) {
+        this.aclToken = aclToken;
     }
 
+    @Override
+    public String toString() {
+        return "ReadBean{" +
+                "key='" + key + '\'' +
+                ", hostUrl='" + hostUrl + '\'' +
+                ", envKey='" + envKey + '\'' +
+                ", aclToken='" + aclToken + '\'' +
+                ", debugMode=" + debugMode +
+                ", apiUri='" + apiUri + '\'' +
+                ", timeoutConnect=" + timeoutConnect +
+                ", timeoutResponse=" + timeoutResponse +
+                ", useGlobalSettings=" + useGlobalSettings +
+                '}';
+    }
+
+    /**
+     * Loads global settings
+     */
+    public void updateFromGlobalConfiguration() {
+        GlobalConsulConfig.DescriptorImpl globalDescriptor = (GlobalConsulConfig.DescriptorImpl)
+                Jenkins.getInstance().getDescriptor(GlobalConsulConfig.class);
+        this.hostUrl = globalDescriptor.getConsulHostUrl();
+        this.apiUri = globalDescriptor.getConsulApiUri();
+        this.aclToken = globalDescriptor.getConsulAclToken();
+        this.timeoutConnect = globalDescriptor.getConsulTimeoutConnection();
+        this.timeoutResponse = globalDescriptor.getConsulTimeoutResponse();
+        this.debugMode = globalDescriptor.getConsulDebugMode();
+    }
+
+    /**
+     * Descriptor for {@link ReadBean}. Used as a singleton.
+     * The class is marked as public so that it can be accessed from views.
+     */
     @Extension
     public static final class DescriptorImpl extends Descriptor<ReadBean> {
-        private DebugMode defaultDebugMode = DebugMode.DISABLED;
+        private String hostUrl;
+        private String aclToken;
+        private String apiUri;
+        private String timeoutConnect;
+        private String timeoutResponse;
+        private DebugMode consulDebugMode;
+        private boolean useGlobalSettings;
+
+        public String getHostUrl() {
+            return hostUrl;
+        }
+
+        public void setHostUrl(String hostUrl) {
+            this.hostUrl = hostUrl;
+        }
+
+        public String getAclToken() {
+            return aclToken;
+        }
+
+        public void setAclToken(String aclToken) {
+            this.aclToken = aclToken;
+        }
+
+        public String getApiUri() {
+            return apiUri;
+        }
+
+        public void setApiUri(String apiUri) {
+            this.apiUri = apiUri;
+        }
+
+        public String getTimeoutConnect() {
+            return timeoutConnect;
+        }
+
+        public void setTimeoutConnect(String timeoutConnect) {
+            this.timeoutConnect = timeoutConnect;
+        }
+
+        public String getTimeoutResponse() {
+            return timeoutResponse;
+        }
+
+        public void setTimeoutResponse(String timeoutResponse) {
+            this.timeoutResponse = timeoutResponse;
+        }
+
+        public DebugMode getConsulDebugMode() {
+            return consulDebugMode;
+        }
+
+        public void setConsulDebugMode(DebugMode consulDebugMode) {
+            this.consulDebugMode = consulDebugMode;
+        }
+
+        public boolean isUseGlobalSettings() {
+            return useGlobalSettings;
+        }
+
+        public void setUseGlobalSettings(boolean useGlobalSettings) {
+            this.useGlobalSettings = useGlobalSettings;
+        }
 
         @Override
         public String getDisplayName() {
             return "Consul Read";
         }
 
-        public FormValidation doCheckToken(
+        public FormValidation doCheckAclToken(
                 @AncestorInPath AbstractProject<?, ?> project,
                 @QueryParameter String value) throws IOException {
             if (0 == value.length()) {
@@ -127,7 +233,7 @@ public class ReadBean extends AbstractDescribableImpl<ReadBean> {
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckUrl(
+        public FormValidation doCheckHostUrl(
                 @AncestorInPath AbstractProject<?, ?> project,
                 @QueryParameter String value) throws IOException {
             if (0 == value.length()) {
@@ -163,11 +269,7 @@ public class ReadBean extends AbstractDescribableImpl<ReadBean> {
         }
 
         public DebugMode getDefaultDebugMode() {
-            return defaultDebugMode;
-        }
-
-        public void setDefaultDebugMode(DebugMode defaultDebugMode) {
-            this.defaultDebugMode = defaultDebugMode;
+            return DebugMode.DISABLED;
         }
 
     }

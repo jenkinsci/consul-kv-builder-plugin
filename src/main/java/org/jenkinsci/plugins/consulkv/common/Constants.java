@@ -7,6 +7,8 @@ package org.jenkinsci.plugins.consulkv.common;
  * @version 1.0.0
  */
 public final class Constants {
+    public static final String PLUGIN_NAME = "Consul K/V Builder";
+    public static final String PLUGIN_LABEL = "consul-kv-builder";
     // \' is left
     public static final char[] SPECIAL_CHARS = {'(', ')', '^', '[', ']', '{', '}', '~', '*', '?', '|', '&', '!', '-',
             '\"', ' '};

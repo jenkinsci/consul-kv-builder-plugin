@@ -47,7 +47,7 @@ public class ConsulKVBuilderTest {
             FreeStyleProject project = jenkinsRule.createFreeStyleProject();
             project.getBuildersList().add(new ConsulKVBuilder(ConsulKVBuilderTest.ACL_ID,
                     ConsulKVBuilderTest.HOST, ConsulKVBuilderTest.KEY,
-                    ConsulKVBuilderTest.VALUE, null, null, RequestMode.WRITE, 30000, 30000, DebugMode.ENABLED));
+                    ConsulKVBuilderTest.VALUE, null, null, RequestMode.WRITE, 30000, 30000, DebugMode.ENABLED, false));
             FreeStyleBuild build = project.scheduleBuild2(0).get();
 
             String log = FileUtils.readFileToString(build.getLogFile());
@@ -68,7 +68,7 @@ public class ConsulKVBuilderTest {
             project.getBuildersList().add(new ConsulKVBuilder(null, ConsulKVBuilderTest.HOST, ConsulKVBuilderTest
                     .KEY, null,
                     null, ConsulKVBuilderTest.ENV_KEY, RequestMode.READ, 30000,
-                    30000, DebugMode.ENABLED));
+                    30000, DebugMode.ENABLED, false));
             FreeStyleBuild build = project.scheduleBuild2(0).get();
 
             String log = FileUtils.readFileToString(build.getLogFile());
@@ -90,7 +90,7 @@ public class ConsulKVBuilderTest {
             project.getBuildersList().add(new ConsulKVBuilder(ConsulKVBuilderTest.ACL_ID,
                     ConsulKVBuilderTest.HOST, ConsulKVBuilderTest.KEY, null, null, null, RequestMode.DELETE, 30000,
                     30000,
-                    DebugMode.ENABLED));
+                    DebugMode.ENABLED, false));
             FreeStyleBuild build = project.scheduleBuild2(0).get();
 
             String log = FileUtils.readFileToString(build.getLogFile());

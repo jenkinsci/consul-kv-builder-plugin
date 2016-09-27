@@ -1,38 +1,45 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:entry title="ACL Token" field="token">
-    <f:textbox />
-  </f:entry>
-  <f:entry title="Host URL" field="hostUrl">
-    <f:textbox />
-  </f:entry>
-  <f:entry title="Key" field="key">
+	<f:optionalBlock title="Use global settings"
+		inline="true" field="useGlobalSettings" negative="true" checked="${instance==null?true:!instance.useGlobalSettings}">
+
+  <f:entry title="ACL Token" field="aclToken" name="aclToken">
     <f:textbox />
   </f:entry>
 
-  <f:entry title="ENV Variable Key" field="envVarKey">
+    <f:entry title="Host URL" field="hostUrl" name="hostUrl">
+      <f:textbox />
+    </f:entry>
+
+        <f:entry title="API URI (/v1/kv/)" field="apiUri" name="apiUri">
+          <f:textbox />
+        </f:entry>
+
+            <f:entry field="timeoutConnection" name="timeoutConnection" title="Connection timeout (10000)">
+              <f:number />
+            </f:entry>
+            <f:entry field="timeoutResponse" name="timeoutResponse" title="Response timeout (30000)">
+              <f:number />
+            </f:entry>
+
+             <f:entry field="debugMode" name="debugMode" title="Debug Mode">
+                        <f:select default="${descriptor.defaultDebugMode}" />
+             </f:entry>
+</f:optionalBlock>
+
+  <f:entry title="Key" field="key" name="key">
     <f:textbox />
   </f:entry>
-  <f:advanced>
-    <f:entry field="requestMode" title="Request Mode">
+
+  <f:entry title="ENV Variable Key" field="envVarKey" name="envVarKey">
+    <f:textbox />
+  </f:entry>
+    <f:entry field="requestMode" name="requestMode" title="Request Mode">
       <f:select />
     </f:entry>
-       <f:entry field="debugMode" title="Debug Mode">
-            <f:select />
-          </f:entry>
-    <f:entry title="Value" field="keyValue">
-      <f:textbox />
-    </f:entry>
-    <f:entry title="API URL Override" field="urlOverride">
-      <f:textbox />
-    </f:entry>
 
-    <f:entry field="timeoutConnection" title="Connection timeout">
-      <f:number />
+    <f:entry title="Value" field="keyValue" name="keyValue">
+      <f:textbox />
     </f:entry>
-    <f:entry field="timeoutResponse" title="Response timeout">
-      <f:number />
-    </f:entry>
-  </f:advanced>
 </j:jelly>
 

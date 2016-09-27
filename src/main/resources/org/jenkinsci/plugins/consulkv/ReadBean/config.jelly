@@ -1,11 +1,34 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:entry title="ACL Token" field="token">
-    <f:textbox />
-  </f:entry>
-  <f:entry title="Host URL" field="url">
-    <f:textbox />
-  </f:entry>
+	<f:optionalBlock title="Use global settings"
+		inline="true" field="useGlobalSettings" negative="true" checked="${instance==null?true:!instance.useGlobalSettings}">
+
+		  <f:entry title="ACL Token" field="aclToken">
+            <f:textbox />
+          </f:entry>
+
+		<f:entry title="Host URL" field="hostUrl">
+            <f:textbox />
+          </f:entry>
+
+		    <f:entry title="API URI (/v1/kv/)" field="apiUri">
+              <f:textbox />
+            </f:entry>
+
+		    <f:entry field="timeoutConnect" title="Connection timeout (10000)">
+              <f:number />
+            </f:entry>
+
+            <f:entry field="timeoutResponse" title="Response timeout (30000)">
+              <f:number />
+            </f:entry>
+
+		<f:entry field="debugMode" title="Debug Mode (DISABLED)">
+                    <f:select />
+                  </f:entry>
+
+   </f:optionalBlock>
+
   <f:entry title="Key" field="key">
     <f:textbox />
   </f:entry>
@@ -13,22 +36,6 @@
   <f:entry title="ENV Variable Key" field="envKey">
     <f:textbox />
   </f:entry>
-
-<f:advanced>
-       <f:entry field="debugMode" title="Debug Mode">
-            <f:select />
-          </f:entry>
-    <f:entry title="API URL Override" field="urlOverride">
-      <f:textbox />
-    </f:entry>
-
-    <f:entry field="timeoutConnect" title="Connection timeout">
-      <f:number />
-    </f:entry>
-    <f:entry field="timeoutResponse" title="Response timeout">
-      <f:number />
-    </f:entry>
-  </f:advanced>
 
   	     <f:entry title="">
             <div align="right">

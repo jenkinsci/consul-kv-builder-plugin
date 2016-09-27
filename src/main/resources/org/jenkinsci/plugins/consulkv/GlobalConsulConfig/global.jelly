@@ -1,0 +1,40 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <!--
+    This Jelly script is used to produce the global configuration option.
+    Hudson uses a set of tag libraries to provide uniformity in forms.
+    To determine where this tag is defined, first check the namespace URI,
+    and then look under $HUDSON/views/. For example, <f:section> is defined
+    in $HUDSON/views/lib/form/section.jelly.
+    It's also often useful to just check other similar scripts to see what
+    tags they use. Views are always organized according to its owner class,
+    so it should be straightforward to find them.
+  -->
+<f:section title="Global HashiCorp Consul Settings" name="globalConsulConfig">
+    <f:entry title="Host URL" help="org/jenkinsci/plugins/consulkv/GlobalConsulConfig/help-hostUrl.html">
+        <f:textbox field="consulHostUrl" name="consulHostUrl" />
+    </f:entry>
+    <f:entry title="ACL Token" help="help-token.html">
+        <f:textbox field="consulAclToken" name="consulAclToken" value="" />
+    </f:entry>
+    <f:entry title="API URI (/v1/kv/)" help="help-urlOverride.html">
+        <f:textbox field="consulApiUri" name="consulApiUri" />
+    </f:entry>
+    <f:entry title="Connection Timeout (10000)" help="help-timeoutConnection.html">
+        <f:textbox field="consulTimeoutConnection" name="consulTimeoutConnection" />
+    </f:entry>
+    <f:entry title="Response Timeout (30000)" help="help-timeoutResponse.html">
+        <f:textbox field="consulTimeoutResponse" name="consulTimeoutResponse" />
+    </f:entry>
+
+    <f:entry field="consulDebugMode" title="Debug Mode (DISABLED)">
+        <f:select default="${descriptor.defaultConsulDebugMode}"/>
+    </f:entry>
+
+    <f:entry title="Test URI (/v1/status/leader)" help="help-testUri.html">
+        <f:textbox field="consulTestUri" name="consulTestUri" />
+    </f:entry>
+    <f:validateButton
+        title="${%Test Connection}" progress="${%Testing...}"
+        method="testConnection" with="consulHostUrl,consulTestUri" />
+  </f:section>
+</j:jelly>

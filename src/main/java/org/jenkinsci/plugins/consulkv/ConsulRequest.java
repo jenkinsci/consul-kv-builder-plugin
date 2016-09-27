@@ -76,4 +76,16 @@ public class ConsulRequest {
     public void setValue(String value) {
         this.value = value;
     }
+
+    @Override
+    public String toString() {
+        return "ConsulRequest{" +
+                "value='" + value + '\'' +
+                ", url='" + url + '\'' +
+                ", timeoutConnect=" + timeoutConnect +
+                ", timeoutResponse=" + timeoutResponse +
+                ", debugMode=" + debugMode +
+                ", requestMode=" + requestMode +
+                '}';
+    }
 }
