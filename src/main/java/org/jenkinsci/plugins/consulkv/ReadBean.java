@@ -31,7 +31,7 @@ public class ReadBean extends AbstractDescribableImpl<ReadBean> {
     private String apiUri;
     private int timeoutConnect;
     private int timeoutResponse;
-    private boolean useGlobalSettings;
+    private boolean ignoreGlobalSettings;
 
     @DataBoundConstructor
     public ReadBean(String aclToken, String hostUrl,
@@ -79,13 +79,13 @@ public class ReadBean extends AbstractDescribableImpl<ReadBean> {
         this.timeoutResponse = timeoutResponse;
     }
 
-    public boolean isUseGlobalSettings() {
-        return this.useGlobalSettings;
+    public boolean isIgnoreGlobalSettings() {
+        return this.ignoreGlobalSettings;
     }
 
     @DataBoundSetter
-    public void setUseGlobalSettings(boolean useGlobalSettings) {
-        this.useGlobalSettings = useGlobalSettings;
+    public void setIgnoreGlobalSettings(boolean ignoreGlobalSettings) {
+        this.ignoreGlobalSettings = ignoreGlobalSettings;
     }
 
     public String getKey() {
@@ -131,7 +131,7 @@ public class ReadBean extends AbstractDescribableImpl<ReadBean> {
                 ", apiUri='" + apiUri + '\'' +
                 ", timeoutConnect=" + timeoutConnect +
                 ", timeoutResponse=" + timeoutResponse +
-                ", useGlobalSettings=" + useGlobalSettings +
+                ", ignoreGlobalSettings=" + ignoreGlobalSettings +
                 '}';
     }
 
@@ -161,7 +161,7 @@ public class ReadBean extends AbstractDescribableImpl<ReadBean> {
         private String timeoutConnect;
         private String timeoutResponse;
         private DebugMode consulDebugMode;
-        private boolean useGlobalSettings;
+        private boolean ignoreGlobalSettings;
 
         public String getHostUrl() {
             return hostUrl;
@@ -211,12 +211,12 @@ public class ReadBean extends AbstractDescribableImpl<ReadBean> {
             this.consulDebugMode = consulDebugMode;
         }
 
-        public boolean isUseGlobalSettings() {
-            return useGlobalSettings;
+        public boolean isIgnoreGlobalSettings() {
+            return ignoreGlobalSettings;
         }
 
-        public void setUseGlobalSettings(boolean useGlobalSettings) {
-            this.useGlobalSettings = useGlobalSettings;
+        public void setIgnoreGlobalSettings(boolean ignoreGlobalSettings) {
+            this.ignoreGlobalSettings = ignoreGlobalSettings;
         }
 
         @Override

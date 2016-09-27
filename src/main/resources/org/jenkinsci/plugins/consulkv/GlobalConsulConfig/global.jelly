@@ -9,29 +9,29 @@
     tags they use. Views are always organized according to its owner class,
     so it should be straightforward to find them.
   -->
-<f:section title="Global HashiCorp Consul Settings" name="globalConsulConfig">
-    <f:entry title="Host URL" help="org/jenkinsci/plugins/consulkv/GlobalConsulConfig/help-hostUrl.html">
-        <f:textbox field="consulHostUrl" name="consulHostUrl" />
+<f:section title="HashiCorp Consul Settings" name="globalConsulConfig">
+    <f:entry title="Host URL" field="consulHostUrl" name="consulHostUrl">
+        <f:textbox />
     </f:entry>
-    <f:entry title="ACL Token" help="help-token.html">
-        <f:textbox field="consulAclToken" name="consulAclToken" value="" />
+    <f:entry title="ACL Token" field="consulAclToken" name="consulAclToken">
+        <f:textbox />
     </f:entry>
-    <f:entry title="API URI (/v1/kv/)" help="help-urlOverride.html">
-        <f:textbox field="consulApiUri" name="consulApiUri" />
+    <f:entry title="API URI (/v1/kv/)" field="consulApiUri" name="consulApiUri">
+        <f:textbox />
     </f:entry>
-    <f:entry title="Connection Timeout (10000)" help="help-timeoutConnection.html">
-        <f:textbox field="consulTimeoutConnection" name="consulTimeoutConnection" />
+    <f:entry title="Connection Timeout (10000)" field="consulTimeoutConnection" name="consulTimeoutConnection">
+        <f:textbox />
     </f:entry>
-    <f:entry title="Response Timeout (30000)" help="help-timeoutResponse.html">
-        <f:textbox field="consulTimeoutResponse" name="consulTimeoutResponse" />
+    <f:entry title="Response Timeout (30000)" field="consulTimeoutResponse" name="consulTimeoutResponse">
+        <f:textbox />
     </f:entry>
 
-    <f:entry field="consulDebugMode" title="Debug Mode (DISABLED)">
+    <f:entry title="Debug Mode (DISABLED)" field="consulDebugMode" name="consulDebugMode" >
         <f:select default="${descriptor.defaultConsulDebugMode}"/>
     </f:entry>
 
-    <f:entry title="Test URI (/v1/status/leader)" help="help-testUri.html">
-        <f:textbox field="consulTestUri" name="consulTestUri" />
+    <f:entry title="Test URI (/v1/status/leader)" field="consulTestUri" name="consulTestUri">
+        <f:textbox />
     </f:entry>
     <f:validateButton
         title="${%Test Connection}" progress="${%Testing...}"

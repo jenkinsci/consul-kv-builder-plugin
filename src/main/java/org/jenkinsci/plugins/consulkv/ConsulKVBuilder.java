@@ -51,16 +51,16 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
     private String apiUri;
     private String envVarKey;
     private RequestMode requestMode;
-    private Integer timeoutConnection;
-    private Integer timeoutResponse;
+    private int timeoutConnection;
+    private int timeoutResponse;
     private DebugMode debugMode;
-    private boolean useGlobalSettings;
+    private boolean ignoreGlobalSettings;
 
     // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @Deprecated
     public ConsulKVBuilder(String aclToken, String hostUrl, String key, String keyValue, String apiUri, String
             envVarKey, RequestMode requestMode, Integer timeoutConnection, Integer timeoutResponse, DebugMode
-                                   debugMode, boolean useGlobalSettings) {
+                                   debugMode, boolean ignoreGlobalSettings) {
         this.aclToken = aclToken;
         this.hostUrl = hostUrl;
         this.key = key;
@@ -71,7 +71,7 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
         this.timeoutConnection = timeoutConnection;
         this.timeoutResponse = timeoutResponse;
         this.debugMode = debugMode;
-        this.useGlobalSettings = useGlobalSettings;
+        this.ignoreGlobalSettings = ignoreGlobalSettings;
     }
 
     @DataBoundConstructor
@@ -160,15 +160,25 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
         this.debugMode = debugMode;
     }
 
-    public boolean isUseGlobalSettings() {
-        return this.useGlobalSettings;
+    public boolean isIgnoreGlobalSettings() {
+        return this.ignoreGlobalSettings;
     }
 
     @DataBoundSetter
-    public void setUseGlobalSettings(boolean useGlobalSettings) {
-        this.useGlobalSettings = useGlobalSettings;
+    public void setIgnoreGlobalSettings(boolean ignoreGlobalSettings) {
+        this.ignoreGlobalSettings = ignoreGlobalSettings;
     }
 
+    /**
+     * Perform the work of the build step
+     *
+     * @param build
+     * @param workspace
+     * @param launcher
+     * @param listener
+     * @throws InterruptedException
+     * @throws IOException
+     */
     @Override
     public void perform(@Nonnull Run<?, ?> build, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull
     TaskListener listener) throws InterruptedException, IOException {
@@ -177,7 +187,7 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
         final EnvVars environment = build.getEnvironment(listener);
 
         try {
-            if (!this.useGlobalSettings) {
+            if (!this.ignoreGlobalSettings) {
                 //Try to use global settings and backup from constants.
                 this.updateFromGlobalConfiguration();
 
@@ -186,9 +196,9 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
                 }
             }
 
-            int timeoutConn = (this.timeoutConnection == null || this.timeoutConnection.intValue() == 0) ? Constants
+            int timeoutConn = (this.timeoutConnection == 0) ? Constants
                     .TIMEOUT_CONNECTION : this.timeoutConnection;
-            int timeoutResp = (this.timeoutResponse == null || this.timeoutResponse.intValue() == 0) ? Constants
+            int timeoutResp = (this.timeoutResponse == 0) ? Constants
                     .TIMEOUT_RESPONSE : this.timeoutResponse;
 
             String expandedUrl = environment.expand(this.hostUrl);
@@ -283,7 +293,7 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
     }
 
     /*
-     * Loads global settings
+     * Loads global settings from <code>GlobalConsulConfig</code>
      */
     private void updateFromGlobalConfiguration() {
         GlobalConsulConfig.DescriptorImpl globalDescriptor = (GlobalConsulConfig.DescriptorImpl)
@@ -309,7 +319,7 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
                 ", timeoutConnection=" + timeoutConnection +
                 ", timeoutResponse=" + timeoutResponse +
                 ", debugMode=" + debugMode +
-                ", useGlobalSettings=" + useGlobalSettings +
+                ", ignoreGlobalSettings=" + ignoreGlobalSettings +
                 '}';
     }
 
@@ -323,13 +333,14 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
      */
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+        private String key;
         private String hostUrl;
         private String aclToken;
         private String apiUri;
-        private String timeoutConnection;
-        private String timeoutResponse;
-        private DebugMode consulDebugMode;
-        private boolean useGlobalSettings;
+        private int timeoutConnection;
+        private int timeoutResponse;
+        private DebugMode debugMode;
+        private boolean ignoreGlobalSettings;
 
         public DescriptorImpl() {
             load();
@@ -339,20 +350,40 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
             return hostUrl;
         }
 
+        public void setHostUrl(String hostUrl) {
+            this.hostUrl = hostUrl;
+        }
+
         public String getAclToken() {
             return aclToken;
+        }
+
+        public void setAclToken(String aclToken) {
+            this.aclToken = aclToken;
         }
 
         public String getApiUri() {
             return apiUri;
         }
 
-        public String getTimeoutConnection() {
+        public void setApiUri(String apiUri) {
+            this.apiUri = apiUri;
+        }
+
+        public int getTimeoutConnection() {
             return timeoutConnection;
         }
 
-        public String getTimeoutResponse() {
+        public void setTimeoutConnection(int timeoutConnection) {
+            this.timeoutConnection = timeoutConnection;
+        }
+
+        public int getTimeoutResponse() {
             return timeoutResponse;
+        }
+
+        public void setTimeoutResponse(int timeoutResponse) {
+            this.timeoutResponse = timeoutResponse;
         }
 
         public ListBoxModel doFillRequestModeItems() {
@@ -379,12 +410,28 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
             return DebugMode.DISABLED;
         }
 
-        public boolean isUseGlobalSettings() {
-            return useGlobalSettings;
+        public boolean isIgnoreGlobalSettings() {
+            return ignoreGlobalSettings;
         }
 
-        public void setUseGlobalSettings(boolean useGlobalSettings) {
-            this.useGlobalSettings = useGlobalSettings;
+        public void setIgnoreGlobalSettings(boolean ignoreGlobalSettings) {
+            this.ignoreGlobalSettings = ignoreGlobalSettings;
+        }
+
+        public DebugMode getDebugMode() {
+            return debugMode;
+        }
+
+        public void setDebugMode(DebugMode debugMode) {
+            this.debugMode = debugMode;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public void setKey(String key) {
+            this.key = key;
         }
 
         public FormValidation doCheckToken(@QueryParameter String value) {
@@ -449,14 +496,48 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+            LOGGER.warning("Descriptor.ignoreGlobalSettings" + ignoreGlobalSettings);
+
+            if (!ignoreGlobalSettings) {
+                updateFromGlobalConfiguration();
+            }
+
             req.bindJSON(this, formData);
+
             save();
+
+            LOGGER.warning("Descriptor.toString()" + toString());
+
             return super.configure(req, formData);
         }
 
         @Override
         public String getDisplayName() {
             return "Consul K/V Builder";
+        }
+
+        private void updateFromGlobalConfiguration() {
+            GlobalConsulConfig.DescriptorImpl globalDescriptor = (GlobalConsulConfig.DescriptorImpl)
+                    Jenkins.getInstance().getDescriptor(GlobalConsulConfig.class);
+            hostUrl = globalDescriptor.getConsulHostUrl();
+            apiUri = globalDescriptor.getConsulApiUri();
+            aclToken = globalDescriptor.getConsulAclToken();
+            timeoutConnection = globalDescriptor.getConsulTimeoutConnection();
+            timeoutResponse = globalDescriptor.getConsulTimeoutResponse();
+            debugMode = globalDescriptor.getConsulDebugMode();
+        }
+
+        @Override
+        public String toString() {
+            return "DescriptorImpl{" +
+                    "hostUrl='" + hostUrl + '\'' +
+                    ", aclToken='" + aclToken + '\'' +
+                    ", apiUri='" + apiUri + '\'' +
+                    ", timeoutConnection=" + timeoutConnection +
+                    ", timeoutResponse=" + timeoutResponse +
+                    ", debugMode=" + debugMode +
+                    ", ignoreGlobalSettings=" + ignoreGlobalSettings +
+                    '}';
         }
     }
 }

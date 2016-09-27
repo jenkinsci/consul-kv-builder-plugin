@@ -1,7 +1,7 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 	<f:optionalBlock title="Use global settings"
-		inline="true" field="useGlobalSettings" negative="true" checked="${instance==null?true:!instance.useGlobalSettings}">
+		inline="true" field="ignoreGlobalSettings" negative="true" checked="${instance==null?true:!instance.ignoreGlobalSettings}">
 
 		  <f:entry title="ACL Token" field="aclToken">
             <f:textbox />

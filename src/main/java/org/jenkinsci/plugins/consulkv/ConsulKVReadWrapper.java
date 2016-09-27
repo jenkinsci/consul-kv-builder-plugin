@@ -47,7 +47,7 @@ public class ConsulKVReadWrapper extends SimpleBuildWrapper {
         for (ReadBean read : reads) {
 
             try {
-                if (!read.isUseGlobalSettings()) {
+                if (!read.isIgnoreGlobalSettings()) {
                     //Try to use global settings and backup from constants.
                     read.updateFromGlobalConfiguration();
 
@@ -101,6 +101,10 @@ public class ConsulKVReadWrapper extends SimpleBuildWrapper {
                         //Use token field value
                         url += apiUrl + read.getKey() + String.format(Constants.TOKEN_URL_PATTERN, read.getAclToken());
                     }
+                }
+
+                if (read.getDebugMode().equals(DebugMode.ENABLED)) {
+                    logger.println("Consul READ URL:  " + url.toString());
                 }
 
                 ConsulRequest consulRequest = ConsulRequestFactory.request().withUrl(url).withTimeoutConnect
