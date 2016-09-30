@@ -23,7 +23,6 @@ import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * Wrapper plugin to read Consul K/V data and store in ENV variables
@@ -72,7 +71,7 @@ public class ConsulKVReadWrapper extends SimpleBuildWrapper {
                 String url = read.getHostUrl();
 
 
-                if (!Strings.isBlank(read.getAclToken())) {
+                if (Strings.isBlank(read.getAclToken())) {
                     url += apiUrl + read.getKey();
                 } else {
                     if (read.getAclToken().contains("${")) {
@@ -113,7 +112,8 @@ public class ConsulKVReadWrapper extends SimpleBuildWrapper {
                                 (logger).build();
 
                 String responseRaw = ConsulRequestUtils.read(consulRequest);
-                String value = ConsulRequestUtils.decodeValue(ConsulRequestUtils.parseJson(responseRaw));
+                String value = ConsulRequestUtils.decodeValue(ConsulRequestUtils.parseJson(responseRaw, Constants
+                        .FIELD_VALUE));
 
                 read.setEnvKey(Strings.normalizeStoragekey(read.getEnvKey()));
 

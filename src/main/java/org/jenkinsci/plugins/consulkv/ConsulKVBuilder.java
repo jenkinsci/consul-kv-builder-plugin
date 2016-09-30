@@ -32,6 +32,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 /**
@@ -239,7 +240,8 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
                                 (requestMode).withLogger(logger).build();
 
                 responseRaw = ConsulRequestUtils.read(consulRequest);
-                String value = ConsulRequestUtils.decodeValue(ConsulRequestUtils.parseJson(responseRaw));
+                String value =
+                        ConsulRequestUtils.decodeValue(ConsulRequestUtils.parseJson(responseRaw, Constants.FIELD_VALUE));
                 logger.println(String.format("Consul K/V pair:  %s=%s", this.key, value));
 
                 //Set ENV Variable

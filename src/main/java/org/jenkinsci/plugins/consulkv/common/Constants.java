@@ -31,6 +31,8 @@ public final class Constants {
     public static final int HTTP_MULTI_CHOICES = 300;
     public static final String TOKEN_URL_PATTERN = "?token=%s";
 
+    public static final String FIELD_VALUE = "Value";
+
     private Constants() {
 
     }

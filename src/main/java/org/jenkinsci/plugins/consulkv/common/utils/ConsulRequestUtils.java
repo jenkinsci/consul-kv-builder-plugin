@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.util.Base64;
+
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -29,6 +30,11 @@ import org.jenkinsci.plugins.consulkv.common.exceptions.ConsulRequestException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Utility class for HTTP requests to Hashicorp Consul REST API.
@@ -169,14 +175,25 @@ public final class ConsulRequestUtils {
         }
     }
 
-    public static String parseJson(String data) throws IOException {
+    public static String parseJson(String data, String field) throws IOException {
+        List<String> fields = Arrays.asList(field);
+        return parseJson(data, fields, 0).get(field);
+    }
+
+    public static Map<String, String> parseJson(String data, List<String> fields, int index) throws IOException {
+        Map<String, String> map = new HashMap<String, String>();
+
         ObjectMapper mapper = new ObjectMapper();
         JsonFactory factory = mapper.getJsonFactory();
-
         JsonParser jsonParser = factory.createParser(data);
-        JsonNode actualObj = mapper.readTree(jsonParser);
+        JsonNode jsonObj = mapper.readTree(jsonParser);
 
-        return actualObj.get(0).get("Value").toString();
+        for (String field : fields) {
+            map.put(field, jsonObj.get(index).get(field).toString());
+        }
+
+
+        return map;
     }
 
     public static String decodeValue(String value) throws UnsupportedEncodingException {
