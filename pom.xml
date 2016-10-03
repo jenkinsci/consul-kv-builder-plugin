@@ -11,7 +11,7 @@
 
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>consul-kv-builder</artifactId>
-    <version>2.0.9</version>
+    <version>2.0.10-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Consul KV Builder</name>
 
@@ -61,7 +61,7 @@
       <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
       <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
       <url>http://github.com/jenkinsci/${project.artifactId}-plugin</url>
-    <tag>consul-kv-builder-2.0.9</tag>
+    <tag>consul-kv-builder-2.0.6</tag>
   </scm>
     
     <repositories>
