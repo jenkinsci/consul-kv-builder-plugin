@@ -498,17 +498,12 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-            LOGGER.warning("Descriptor.ignoreGlobalSettings" + ignoreGlobalSettings);
-
             if (!ignoreGlobalSettings) {
                 updateFromGlobalConfiguration();
             }
 
             req.bindJSON(this, formData);
-
             save();
-
-            LOGGER.warning("Descriptor.toString()" + toString());
 
             return super.configure(req, formData);
         }
