@@ -14,6 +14,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * Backing bean for Jelly forms in Build Environment Wrapper
@@ -22,6 +23,7 @@ import java.io.IOException;
  * @version 1.0.0
  */
 public class ReadBean extends AbstractDescribableImpl<ReadBean> {
+    private static Logger LOGGER = Logger.getLogger(ReadBean.class.getName());
 
     private String key;
     private String hostUrl;
@@ -116,7 +118,7 @@ public class ReadBean extends AbstractDescribableImpl<ReadBean> {
         return aclToken;
     }
 
-    public void setAclToken(String token) {
+    public void setAclToken(String aclToken) {
         this.aclToken = aclToken;
     }
 
@@ -141,12 +143,17 @@ public class ReadBean extends AbstractDescribableImpl<ReadBean> {
     public void updateFromGlobalConfiguration() {
         GlobalConsulConfig.DescriptorImpl globalDescriptor = (GlobalConsulConfig.DescriptorImpl)
                 Jenkins.getInstance().getDescriptor(GlobalConsulConfig.class);
-        this.hostUrl = globalDescriptor.getConsulHostUrl();
-        this.apiUri = globalDescriptor.getConsulApiUri();
-        this.aclToken = globalDescriptor.getConsulAclToken();
-        this.timeoutConnect = globalDescriptor.getConsulTimeoutConnection();
-        this.timeoutResponse = globalDescriptor.getConsulTimeoutResponse();
-        this.debugMode = globalDescriptor.getConsulDebugMode();
+
+        if (globalDescriptor != null) {
+            this.hostUrl = globalDescriptor.getConsulHostUrl();
+            this.apiUri = globalDescriptor.getConsulApiUri();
+            this.aclToken = globalDescriptor.getConsulAclToken();
+            this.timeoutConnect = globalDescriptor.getConsulTimeoutConnection();
+            this.timeoutResponse = globalDescriptor.getConsulTimeoutResponse();
+            this.debugMode = globalDescriptor.getConsulDebugMode();
+        } else {
+            LOGGER.warning("Could not load global settings.");
+        }
     }
 
     /**

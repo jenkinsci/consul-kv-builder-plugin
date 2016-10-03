@@ -134,21 +134,21 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
         this.requestMode = requestMode;
     }
 
-    public Integer getTimeoutConnection() {
+    public int getTimeoutConnection() {
         return this.timeoutConnection;
     }
 
     @DataBoundSetter
-    public void setTimeoutConnection(@CheckForNull Integer timeoutConnection) {
+    public void setTimeoutConnection(int timeoutConnection) {
         this.timeoutConnection = timeoutConnection;
     }
 
-    public Integer getTimeoutResponse() {
+    public int getTimeoutResponse() {
         return this.timeoutResponse;
     }
 
     @DataBoundSetter
-    public void setTimeoutResponse(@CheckForNull Integer timeoutResponse) {
+    public void setTimeoutResponse(int timeoutResponse) {
         this.timeoutResponse = timeoutResponse;
     }
 
@@ -300,12 +300,17 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
     private void updateFromGlobalConfiguration() {
         GlobalConsulConfig.DescriptorImpl globalDescriptor = (GlobalConsulConfig.DescriptorImpl)
                 Jenkins.getInstance().getDescriptor(GlobalConsulConfig.class);
-        this.hostUrl = globalDescriptor.getConsulHostUrl();
-        this.apiUri = globalDescriptor.getConsulApiUri();
-        this.aclToken = globalDescriptor.getConsulAclToken();
-        this.timeoutConnection = globalDescriptor.getConsulTimeoutConnection();
-        this.timeoutResponse = globalDescriptor.getConsulTimeoutResponse();
-        this.debugMode = globalDescriptor.getConsulDebugMode();
+
+        if (globalDescriptor != null) {
+            this.hostUrl = globalDescriptor.getConsulHostUrl();
+            this.apiUri = globalDescriptor.getConsulApiUri();
+            this.aclToken = globalDescriptor.getConsulAclToken();
+            this.timeoutConnection = globalDescriptor.getConsulTimeoutConnection();
+            this.timeoutResponse = globalDescriptor.getConsulTimeoutResponse();
+            this.debugMode = globalDescriptor.getConsulDebugMode();
+        } else {
+            LOGGER.warning("Could not load global settings.");
+        }
     }
 
     @Override
@@ -516,12 +521,17 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
         private void updateFromGlobalConfiguration() {
             GlobalConsulConfig.DescriptorImpl globalDescriptor = (GlobalConsulConfig.DescriptorImpl)
                     Jenkins.getInstance().getDescriptor(GlobalConsulConfig.class);
-            hostUrl = globalDescriptor.getConsulHostUrl();
-            apiUri = globalDescriptor.getConsulApiUri();
-            aclToken = globalDescriptor.getConsulAclToken();
-            timeoutConnection = globalDescriptor.getConsulTimeoutConnection();
-            timeoutResponse = globalDescriptor.getConsulTimeoutResponse();
-            debugMode = globalDescriptor.getConsulDebugMode();
+
+            if (globalDescriptor != null) {
+                hostUrl = globalDescriptor.getConsulHostUrl();
+                apiUri = globalDescriptor.getConsulApiUri();
+                aclToken = globalDescriptor.getConsulAclToken();
+                timeoutConnection = globalDescriptor.getConsulTimeoutConnection();
+                timeoutResponse = globalDescriptor.getConsulTimeoutResponse();
+                debugMode = globalDescriptor.getConsulDebugMode();
+            } else {
+                LOGGER.warning("Could not load global settings.");
+            }
         }
 
         @Override
