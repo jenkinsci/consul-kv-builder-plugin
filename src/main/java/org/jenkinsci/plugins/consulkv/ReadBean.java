@@ -141,16 +141,22 @@ public class ReadBean extends AbstractDescribableImpl<ReadBean> {
      * Loads global settings
      */
     public void updateFromGlobalConfiguration() {
-        GlobalConsulConfig.DescriptorImpl globalDescriptor = (GlobalConsulConfig.DescriptorImpl)
-                Jenkins.getInstance().getDescriptor(GlobalConsulConfig.class);
+        Jenkins jenkins = Jenkins.getInstance();
 
-        if (globalDescriptor != null) {
-            this.hostUrl = globalDescriptor.getConsulHostUrl();
-            this.apiUri = globalDescriptor.getConsulApiUri();
-            this.aclToken = globalDescriptor.getConsulAclToken();
-            this.timeoutConnect = globalDescriptor.getConsulTimeoutConnection();
-            this.timeoutResponse = globalDescriptor.getConsulTimeoutResponse();
-            this.debugMode = globalDescriptor.getConsulDebugMode();
+        if (jenkins !=  null) {
+            GlobalConsulConfig.DescriptorImpl globalDescriptor = (GlobalConsulConfig.DescriptorImpl)
+                    jenkins.getDescriptor(GlobalConsulConfig.class);
+
+            if (globalDescriptor != null) {
+                this.hostUrl = globalDescriptor.getConsulHostUrl();
+                this.apiUri = globalDescriptor.getConsulApiUri();
+                this.aclToken = globalDescriptor.getConsulAclToken();
+                this.timeoutConnect = globalDescriptor.getConsulTimeoutConnection();
+                this.timeoutResponse = globalDescriptor.getConsulTimeoutResponse();
+                this.debugMode = globalDescriptor.getConsulDebugMode();
+            } else {
+                LOGGER.warning("Could not load global settings.");
+            }
         } else {
             LOGGER.warning("Could not load global settings.");
         }
