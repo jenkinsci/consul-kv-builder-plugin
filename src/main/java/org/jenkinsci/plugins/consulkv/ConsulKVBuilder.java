@@ -247,13 +247,9 @@ public class ConsulKVBuilder extends Builder implements SimpleBuildStep {
                 //Set ENV Variable
                 String expandedEnvVarKey = environment.expand(this.envVarKey);
                 String storageKey = Strings.normalizeStoragekey(expandedEnvVarKey);
+                environment.addLine(String.format("%s=%s", storageKey, value));
 
-                VariableInjectionAction action = new VariableInjectionAction(storageKey, value);
-                build.addAction(action);
-                build.getEnvironment(listener);
-
-                logger.println(String.format("Stored ENV variable (k,v):  %s=%s", storageKey, build.getEnvironment
-                        (listener).get(storageKey)));
+                logger.println(String.format("Stored ENV variable (k,v):  %s=%s", storageKey, environment.get(storageKey)));
             } else if (this.requestMode.equals(RequestMode.WRITE)) {
                 //Write
                 String expandedKeyValue = environment.expand(this.keyValue);
