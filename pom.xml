@@ -30,7 +30,7 @@
              ~ stapler-plugin.version: The Stapler Maven plugin version required by the plugin.
         -->
         <commons.lang.version>2.6</commons.lang.version>
-        <commons.io.version>2.4</commons.io.version>
+        <commons.io.version>2.7</commons.io.version>
         <google.http-client.version>1.21.0</google.http-client.version>
         <apache.http-comps.version>4.5.1</apache.http-comps.version>
         <google.guava.version>19.0</google.guava.version>
